@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Altun's IP Information Lookup - Free IP Tracker & Geolocation Tool</title>
+  <meta name="description" content="Free IP tracker and geolocation tool. Get detailed information about any IP address including location, ISP, network data, port scanning, and more.">
+  <meta name="keywords" content="ip tracker, ip lookup, ip geolocation, ip information, ip address lookup, ip location, ip scanner, ip checker, ip details, ip analysis">
+  <meta name="author" content="Onur Altun">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Altun's IP Information Lookup - Free IP Tracker & Geolocation Tool">
+  <meta property="og:description" content="Free IP tracker and geolocation tool. Get detailed information about any IP address including location, ISP, network data, port scanning, and more.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://onuraltun.tr/ipinfo">
+  <meta property="og:image" content="https://onuraltun.tr/ipinfo/images/og-image.png">
+  <link rel="canonical" href="https://onuraltun.tr/ipinfo">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+  <!-- Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+</head>
+<body>
+  <div class="loading-message">
+    <p>Please Wait</p>
+    <div class="loading-spinner"></div>
+  </div>
+
+  <div class="container">
+    <% if (!ipData) { %>
+    <div class="home-container">
+      <h1>Altun's IP Information Lookup</h1>
+      
+      <form action="/lookup" method="POST" class="search-form" onsubmit="showLoading()">
+        <div class="form-group">
+          <input 
+            type="text" 
+            name="ipAddress" 
+            id="ipAddress" 
+            placeholder="Enter IP address" 
+            required
+          >
+          <button type="submit">Lookup</button>
+        </div>
+        <div class="info-text">
+          <small>Get detailed information about any IP address including geolocation, network data, port scanning, and more</small>
+        </div>
+      </form>
+    </div>
+    <% } else { %>
+    <h1>Altun's IP Information Lookup</h1>
+    
+    <form action="/lookup" method="POST" class="search-form" onsubmit="showLoading()">
+      <div class="form-group">
+        <input 
+          type="text" 
+          name="ipAddress" 
+          id="ipAddress" 
+          placeholder="Enter IP address" 
+          required
+        >
+        <button type="submit">Lookup</button>
+      </div>
+      <div class="info-text">
+        <small>Get detailed information about any IP address including geolocation, network data, port scanning, and more</small>
+      </div>
+    </form>
+    <% } %>
+
+    <% if (error) { %>
+      <div class="error">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <% if (ipData) { %>
+      <h2>Results for <%= ipData.ip %></h2>
+      <div class="results">
+        <div class="result-card">
+          <h3>Basic Information</h3>
+          <div class="data-grid">
+            <div class="data-item">
+              <span class="label">IP Address:</span>
+              <span class="value"><%= ipData.ip %></span>
+            </div>
+            <div class="data-item">
+              <span class="label">ISP:</span>
+              <span class="value"><%= ipData.ipApi.isp || 'N/A' %></span>
+            </div>
+            <div class="data-item">
+              <span class="label">Organization:</span>
+              <span class="value"><%= ipData.ipApi.org || ipData.ipInfo.org || 'N/A' %></span>
+            </div>
+            <div class="data-item">
+              <span class="label">AS Number:</span>
+              <span class="value"><%= ipData.ipApi.as || 'N/A' %></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-card">
+          <h3>Network Information</h3>
+          <div class="data-grid">
+            <div class="data-item">
+              <span class="label">Mobile Connection:</span>
+              <span class="value"><%= ipData.ipApi.mobile ? 'Yes' : 'No' %></span>
+            </div>
+            <div class="data-item">
+              <span class="label">Proxy/VPN:</span>
+              <span class="value"><%= ipData.ipApi.proxy ? 'Yes' : 'No' %></span>
+            </div>
+            <div class="data-item">
+              <span class="label">Hosting:</span>
+              <span class="value"><%= ipData.ipApi.hosting ? 'Yes' : 'No' %></span>
+            </div>
+            <div class="data-item">
+              <span class="label">Tor Exit Node:</span>
+              <span class="value"><%= ipData.isTorNode ? 'Yes' : 'No' %></span>
+            </div>
+            <div class="data-item">
+              <span class="label">Ping (Latency):</span>
+              <span class="value"><%= ipData.network.latency || 'N/A' %></span>
+            </div>
+            <% if (ipData.ipInfo.hostname) { %>
+            <div class="data-item">
+              <span class="label">Hostname:</span>
+              <span class="value"><%= ipData.ipInfo.hostname %></span>
+            </div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="result-card">
+          <h3>Location Information</h3>
+          <div class="data-grid">
+            <div class="data-item">
+              <span class="label">Country:</span>
+              <span class="value"><%= ipData.ipApi.country || ipData.geo.country || 'N/A' %></span>
+            </div>
+            <div class="data-item">
+              <span class="label">Region:</span>
+              <span class="value"><%= ipData.ipApi.regionName || ipData.geo.region || 'N/A' %></span>
+            </div>
+            <div class="data-item">
+              <span class="label">City:</span>
+              <span class="value"><%= ipData.ipApi.city || ipData.geo.city || 'N/A' %></span>
+            </div>
+            <div class="data-item">
+              <span class="label">Zip Code:</span>
+              <span class="value"><%= ipData.ipApi.zip || 'N/A' %></span>
+            </div>
+            <div class="data-item">
+              <span class="label">Timezone:</span>
+              <span class="value"><%= ipData.ipApi.timezone || ipData.ipInfo.timezone || 'N/A' %></span>
+            </div>
+          </div>
+        </div>
+
+        <% if (ipData.ports && ipData.ports.length > 0) { %>
+        <div class="result-card">
+          <h3>Port Scan Results</h3>
+          <p class="info-text">Common ports scanned to check for open services</p>
+          <div class="port-grid">
+            <% 
+              // Show only open ports first, then closed
+              const openPorts = ipData.ports.filter(port => port.open);
+              const closedPorts = ipData.ports.filter(port => !port.open);
+              const sortedPorts = [...openPorts, ...closedPorts]; 
+              
+              // Display only first 16 ports to save space
+              const displayPorts = sortedPorts.slice(0, 16);
+            %>
+            <% displayPorts.forEach(port => { %>
+              <div class="port-item <%= port.open ? 'open' : 'closed' %>">
+                <span class="port-number"><%= port.port %></span>
+                <span class="port-status"><%= port.open ? 'OPEN' : 'CLOSED' %></span>
+                <span class="port-service"><%= getServiceName(port.port) %></span>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+        <% } %>
+
+        <% if (ipData.hostnames && ipData.hostnames.length > 0) { %>
+        <div class="result-card">
+          <h3>DNS Information</h3>
+          <div class="data-grid">
+            <div class="data-item">
+              <span class="label">Reverse DNS:</span>
+              <div class="value">
+                <% if (ipData.hostnames[0] === 'No hostname found or error in lookup') { %>
+                  No hostname found
+                <% } else { %>
+                  <ul class="hostnames-list">
+                    <% ipData.hostnames.forEach(hostname => { %>
+                      <li><%= hostname %></li>
+                    <% }); %>
+                  </ul>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% } %>
+
+        <% if (ipData.blacklists && ipData.blacklists.length > 0) { %>
+        <div class="result-card">
+          <h3>Security & Blacklist Information</h3>
+          <p class="info-text">Checks if the IP is listed on various spam and security blacklists</p>
+          <div class="blacklist-grid">
+            <% ipData.blacklists.forEach(item => { %>
+              <div class="blacklist-item <%= item.listed ? 'listed' : 'not-listed' %>">
+                <span class="blacklist-name"><%= item.list %></span>
+                <span class="blacklist-status"><%= item.listed ? '⚠️ LISTED' : '✅ CLEAN' %></span>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+        <% } %>
+
+        <% if (ipData.whois && (ipData.whois.domain || ipData.whois.registry || ipData.whois.registrar)) { %>
+        <div class="result-card">
+          <h3>WHOIS Information</h3>
+          <div class="data-grid">
+            <% if (ipData.whois.domain) { %>
+            <div class="data-item">
+              <span class="label">Domain:</span>
+              <span class="value"><%= ipData.whois.domain %></span>
+            </div>
+            <% } %>
+            <% if (ipData.whois.registry) { %>
+            <div class="data-item">
+              <span class="label">Registry:</span>
+              <span class="value"><%= ipData.whois.registry %></span>
+            </div>
+            <% } %>
+            <% if (ipData.whois.registrar) { %>
+            <div class="data-item">
+              <span class="label">Registrar:</span>
+              <span class="value"><%= ipData.whois.registrar %></span>
+            </div>
+            <% } %>
+            <% if (ipData.whois.created) { %>
+            <div class="data-item">
+              <span class="label">Created:</span>
+              <span class="value"><%= ipData.whois.created %></span>
+            </div>
+            <% } %>
+            <% if (ipData.whois.expires) { %>
+            <div class="data-item">
+              <span class="label">Expires:</span>
+              <span class="value"><%= ipData.whois.expires %></span>
+            </div>
+            <% } %>
+          </div>
+        </div>
+        <% } %>
+
+        <% if (ipData.network && ipData.network.traceroute && ipData.network.traceroute.length > 0) { %>
+        <div class="result-card">
+          <h3>Network Path (Traceroute)</h3>
+          <p class="info-text">Shows the network path from your computer to the target IP</p>
+          <div class="traceroute-container">
+            <table class="traceroute-table">
+              <thead>
+                <tr>
+                  <th>Hop</th>
+                  <th>IP Address</th>
+                  <th>Response Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% ipData.network.traceroute.forEach((hop, index) => { 
+                  // Only show first 10 hops to save space
+                  if (index < 10) { %>
+                  <tr>
+                    <td><%= hop.hop %></td>
+                    <td><%= hop.ip %></td>
+                    <td><%= hop.time %></td>
+                  </tr>
+                <% }
+                }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <% } %>
+
+        <% if (ipData.certificates && ipData.certificates.length > 0) { %>
+        <div class="result-card">
+          <h3>SSL/TLS Certificate Information</h3>
+          <p class="info-text">Details about SSL certificates found on secure ports</p>
+          
+          <% ipData.certificates.forEach(cert => { %>
+            <div class="cert-container">
+              <h4>Certificate for Port <%= cert.port %> (<%= getServiceName(cert.port) %>)</h4>
+              <div class="data-grid">
+                <div class="data-item">
+                  <span class="label">Common Name:</span>
+                  <span class="value"><%= cert.commonName %></span>
+                </div>
+                <div class="data-item">
+                  <span class="label">Organization:</span>
+                  <span class="value"><%= cert.organization %></span>
+                </div>
+                <div class="data-item">
+                  <span class="label">Issuer:</span>
+                  <span class="value"><%= cert.issuer %></span>
+                </div>
+                <div class="data-item">
+                  <span class="label">Valid From:</span>
+                  <span class="value"><%= cert.validFrom %></span>
+                </div>
+                <div class="data-item">
+                  <span class="label">Valid Until:</span>
+                  <span class="value"><%= cert.validTo %></span>
+                </div>
+                <div class="data-item">
+                  <span class="label">SNI Supported:</span>
+                  <span class="value"><%= cert.sniSupported ? 'Yes' : 'No' %></span>
+                </div>
+                <% if (cert.altNames && cert.altNames.length > 0) { %>
+                <div class="data-item full-width">
+                  <span class="label">Subject Alternative Names:</span>
+                  <div class="value alt-names">
+                    <% 
+                      // Show only first 5 alt names to save space
+                      const displayNames = cert.altNames.slice(0, 5);
+                      displayNames.forEach(name => { 
+                    %>
+                      <span class="alt-name"><%= name %></span>
+                    <% }); 
+                      if (cert.altNames.length > 5) { %>
+                        <span class="alt-name">+<%= cert.altNames.length - 5 %> more</span>
+                    <% } %>
+                  </div>
+                </div>
+                <% } %>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+        <% } %>
+
+        <% if (ipData.ipInfo.loc) { %>
+        <div class="map-container">
+          <h3>Location Map</h3>
+          <div id="map"></div>
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              const lat = parseFloat("<%= ipData.ipApi.lat || ipData.geo.latitude || 0 %>");
+              const lng = parseFloat("<%= ipData.ipApi.lon || ipData.geo.longitude || 0 %>");
+              
+              // Create the map centered at the IP's location
+              const map = L.map('map', {
+                attributionControl: false
+              }).setView([lat, lng], 10);
+              
+              // Add dark theme Carto tiles
+              L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+              }).addTo(map);
+              
+              // Add a green marker at the IP's location
+              const greenIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+              });
+              
+              L.marker([lat, lng], {icon: greenIcon})
+                .addTo(map)
+                .bindPopup("<b><%= ipData.ip %></b><br><%= ipData.ipApi.city || ipData.geo.city || '' %>, <%= ipData.ipApi.country || ipData.geo.country || '' %>")
+                .openPopup();
+            });
+          </script>
+        </div>
+        <% } %>
+      </div>
+    <% } %>
+
+    <footer class="footer">
+      <div class="copyright">
+        <script>
+          document.write('© ' + new Date().getFullYear() + ' Onur Altun. All Rights Reserved. | Computer Programmer & Computer Science Enthusiast');
+        </script>
+        <div class="footer-links">
+          <a href="#" onclick="openModal('privacyModal'); return false;">Privacy Policy</a>
+          <a href="#" onclick="openModal('disclaimerModal'); return false;">Disclaimer</a>
+          <a href="#" onclick="openModal('aboutModal'); return false;">About</a>
+          <a href="#" onclick="openModal('donationsModal'); return false;">Donations</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Privacy Policy Modal -->
+  <div id="privacyModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal('privacyModal')">&times;</span>
+      <div class="privacy-content">
+        <h2>Privacy Policy</h2>
+        <p>Last updated: March 2024</p>
+        
+        <h3>1. Information We Collect</h3>
+        <p>We collect the following information when you use our IP lookup service:</p>
+        <ul>
+          <li>IP addresses that you look up</li>
+          <li>Your IP address for security purposes</li>
+          <li>Basic usage statistics</li>
+        </ul>
+
+        <h3>2. How We Use Your Information</h3>
+        <p>We use the collected information to:</p>
+        <ul>
+          <li>Provide IP lookup services</li>
+          <li>Improve our service quality</li>
+          <li>Prevent abuse and ensure security</li>
+        </ul>
+
+        <h3>3. Contact Us</h3>
+        <p>For questions about this Privacy Policy, contact:</p>
+        <p>Email: petabyte64@gmail.com</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disclaimer Modal -->
+  <div id="disclaimerModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal('disclaimerModal')">&times;</span>
+      <div class="privacy-content">
+        <h2>Disclaimer</h2>
+        <p>Last updated: March 2024</p>
+
+        <h3>1. Service Limitations</h3>
+        <p>This IP lookup service is provided "as is" without any warranties.</p>
+        <ul>
+          <li>We cannot guarantee 100% accuracy</li>
+          <li>Service availability may vary</li>
+          <li>Use the information responsibly</li>
+        </ul>
+
+        <h3>2. Usage Terms</h3>
+        <p>By using this service, you agree to:</p>
+        <ul>
+          <li>Not use for malicious purposes</li>
+          <li>Comply with all applicable laws</li>
+          <li>Respect our fair usage policy</li>
+        </ul>
+
+        <h3>3. Contact</h3>
+        <p>For questions about this disclaimer, contact:</p>
+        <p>Email: petabyte64@gmail.com</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Modal -->
+  <div id="aboutModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal('aboutModal')">&times;</span>
+      <div class="privacy-content">
+        <h2>About IP Information Lookup</h2>
+        <p>Created by Onur Altun, this tool provides comprehensive IP address information and analysis.</p>
+
+        <h3>Features</h3>
+        <ul>
+          <li>IP Geolocation</li>
+          <li>Network Information</li>
+          <li>Security Analysis</li>
+          <li>Port Scanning</li>
+          <li>Interactive Maps</li>
+        </ul>
+
+        <h3>Contact</h3>
+        <p>For questions or support, contact:</p>
+        <p>Email: petabyte64@gmail.com</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Donations Modal -->
+  <div id="donationsModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal('donationsModal')">&times;</span>
+      <div class="privacy-content">
+        <h2>Support This Project</h2>
+        <p>If you find this tool helpful, consider supporting its development with a cryptocurrency donation.</p>
+
+        <div class="crypto-grid">
+          <div class="crypto-item">
+            <h3>Bitcoin (BTC)</h3>
+            <div class="crypto-address" onclick="copyToClipboard(this)">bc1qj224dp8zcpvh0mc5qvwlu53u7vhsl3qef9yz2c</div>
+          </div>
+
+          <div class="crypto-item">
+            <h3>Ethereum (ETH)</h3>
+            <div class="crypto-address" onclick="copyToClipboard(this)">0xCcEd5136D711238c4d8089285BcB6BE282a46315</div>
+          </div>
+
+          <div class="crypto-item">
+            <h3>Polkadot (DOT)</h3>
+            <div class="crypto-address" onclick="copyToClipboard(this)">15ZgdnmYPsdYk5Z2oatj58Rxop8ZJV4qboLVvviv1bqCBUFG</div>
+          </div>
+
+          <div class="crypto-item">
+            <h3>Tron (TRX)</h3>
+            <div class="crypto-address" onclick="copyToClipboard(this)">TGf4Kgvx9rmj9vqjWajEQEevGcEGwWWrvF</div>
+          </div>
+
+          <div class="crypto-item">
+            <h3>Solana (SOL)</h3>
+            <div class="crypto-address" onclick="copyToClipboard(this)">3wLYGco5ybKob6LeaN2XT1nfdzFr4N9egFqmiXueueWU</div>
+          </div>
+
+          <div class="crypto-item">
+            <h3>Binance Coin (BNB)</h3>
+            <div class="crypto-address" onclick="copyToClipboard(this)">0xCcEd5136D711238c4d8089285BcB6BE282a46315</div>
+          </div>
+
+          <div class="crypto-item">
+            <h3>Ripple (XRP)</h3>
+            <div class="crypto-address" onclick="copyToClipboard(this)">rDM7BrvfoKKiwQSgV7qGCConA137AyzmRC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Modal functionality
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+    }
+
+    // Copy to clipboard functionality
+    function copyToClipboard(element) {
+      const text = element.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        // Show feedback
+        const originalText = element.innerHTML;
+        element.innerHTML = 'Copied!';
+        setTimeout(() => {
+          element.innerHTML = originalText;
+        }, 1500);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+      });
+    }
+
+    // Loading message functionality
+    function showLoading() {
+      document.querySelector('.loading-message').classList.add('active');
+    }
+
+    // Hide loading message when page is fully loaded
+    window.addEventListener('load', function() {
+      document.querySelector('.loading-message').classList.remove('active');
+    });
+  </script>
+</body>
+</html> 

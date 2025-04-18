@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Sitemap: https://onuraltun.tr/ipinfo/sitemap.xml
+
+# Disallow admin and private directories
+Disallow: /admin/
+Disallow: /private/
+Disallow: /api/ 
