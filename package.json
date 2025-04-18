@@ -1,0 +1,29 @@
+{
+  "name": "ipinfo",
+  "version": "1.0.0",
+  "description": "IP Information Lookup Tool",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ottomanturkss/ipinfo.git"
+  },
+  "author": "Onur Altun (ottomanturkss)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ottomanturkss/ipinfo/issues"
+  },
+  "homepage": "https://github.com/ottomanturkss/ipinfo#readme",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "body-parser": "^1.20.2",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+} 
